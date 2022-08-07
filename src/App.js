@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Web3ReactProvider, useWeb3React } from "@web3-react/core";
 import { Web3Provider } from "@ethersproject/providers";
+import { Box, Switch as MSwitch, Typography } from "@mui/material";
+import { ThemeProvider } from '@mui/material/styles'
+import { THEME_TYPE } from "./themes/ThemeContext";
+
 import useScrollToTop from "./hooks/useScrollToTop";
 
 import { Switch, Route, NavLink, HashRouter as Router, Redirect, useLocation, useHistory } from "react-router-dom";
@@ -109,6 +113,9 @@ import { useLocalStorage } from "react-use";
 import { RedirectPopupModal } from "./components/ModalViews/RedirectModal";
 import { REDIRECT_POPUP_TIMESTAMP_KEY } from "./utils/constants";
 import Jobs from "./views/Jobs/Jobs";
+import useTheme from "./hooks/useTheme";
+import light from './themes/light'
+import dark from './themes/dark'
 
 if ("ethereum" in window) {
   window.ethereum.autoRefreshOnNetworkChange = false;
@@ -206,6 +213,7 @@ function AppHeaderUser({
   const { chainId } = useChainId();
   const { active, account } = useWeb3React();
   const showConnectionOptions = !isHomeSite();
+  const { theme, toggleTheme } = useTheme();
 
   const networkOptions = [
     {
@@ -238,11 +246,21 @@ function AppHeaderUser({
     [chainId, active]
   );
 
+  const handleThemeChange = () => {
+    toggleTheme()
+  }
+
   const selectorLabel = getChainName(chainId);
 
   if (!active) {
     return (
       <div className="App-header-user">
+        <Box>
+          <Typography component="span">Light</Typography>
+          <MSwitch checked={theme === THEME_TYPE.DARK} onChange={handleThemeChange} />
+          <Typography component="span">Dark</Typography>
+        </Box>
+
         <div className="App-header-user-link">
           <HeaderLink activeClassName="active" className="default-btn" to="/trade">
             Trade
@@ -650,7 +668,7 @@ function FullApp() {
   }, [active, chainId, vaultAddress, positionRouterAddress]);
 
   return (
-    <>
+    <Box bgcolor="background.default">
       <div className="App">
         {/* <div className="App-background-side-1"></div>
         <div className="App-background-side-2"></div>
@@ -944,22 +962,29 @@ function FullApp() {
           Save
         </button>
       </Modal>
-    </>
+    </Box>
   );
 }
 
 function App() {
   useScrollToTop();
+  const { theme } = useTheme();
+  const selectedTheme = theme === THEME_TYPE.LIGHT ? light : dark;
+
   return (
-    <SWRConfig value={{ refreshInterval: 5000 }}>
-      <Web3ReactProvider getLibrary={getLibrary}>
-        <SEO>
-          <Router>
-            <FullApp />
-          </Router>
-        </SEO>
-      </Web3ReactProvider>
-    </SWRConfig>
+    <ThemeProvider theme={selectedTheme}>
+      <SWRConfig value={{ refreshInterval: 5000 }}>
+        <Web3ReactProvider getLibrary={getLibrary}>
+          <SEO>
+            <Box bgcolor="background.default">
+              <Router>
+                <FullApp />
+              </Router>
+            </Box>
+          </SEO>
+        </Web3ReactProvider>
+      </SWRConfig>
+    </ThemeProvider>
   );
 }
 
